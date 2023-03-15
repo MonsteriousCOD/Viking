@@ -1,67 +1,42 @@
-import Web3 from "web3";
+import { ethers } from "ethers";
 import TheVikingsGameArtifact from "./TheVikingsGame.json";
 
-let web3;
-let contract; 0xc5Fdf5aBCdD7E9f9275f46a4ACB27865C83B7B67
-let userAddress; 0x924cAC385d8eCEFc0f90C7B269813A5Eed1C5541
+// Connect to the network
+let provider = new ethers.providers.Web3Provider(window.ethereum);
 
-async function connectWallet() {
-  if (window.ethereum) {
-    web3 = new Web3(window.ethereum);
-    try {
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      userAddress = await web3.eth.getAccounts()[0];
-      initContract();
-      return userAddress;
-    } catch (error) {
-      console.error("User rejected connection:", error);
-    }
-  } else {
-    console.error("Ethereum browser extension not detected!");
-  }
-}
+// The address that the smart contract is deployed at
+let contractAddress = "0xc5Fdf5aBCdD7E9f9275f46a4ACB27865C83B7B67";
 
-function initContract() {
-  const contractAddress = "<CONTRACT_ADDRESS>";
-  contract = new web3.eth.Contract(TheVikingsGameArtifact.abi, contractAddress);
-}
+// Create a new instance of the smart contract
+let contract = new ethers.Contract(contractAddress, TheVikingsGameArtifact.abi, provider);
 
-function displayUserAddress(address) {
-  document.getElementById("userAddress").innerText = address;
-}
+async function mint(quantity, price, callback) {
+    let normalPrice = ethers.utils.parseEther(price.toString()) * quantity;
+    console.log(normalPrice);
+    let result = {};
+    result.success = false;
 
-async function updateTokenPrice() {
-  const priceWei = await contract.methods.price().call();
-  const priceEth = web3.utils.fromWei(priceWei, "ether");
-  document.getElementById("tokenPrice").innerText = `${priceEth} ETH`;
-}
-
-async function mintTokens() {
-  const quantity = document.getElementById("mintQuantity").value;
-  const priceWei = await contract.methods.price().call();
-  const totalCost = priceWei * quantity;
-
-  contract.methods
-    .mint(quantity)
-    .send({ from: userAddress, value: totalCost })
-    .on("transactionHash", (hash) => {
-      console.log("Transaction Hash:", hash);
-    })
-    .on("confirmation", (confirmationNumber, receipt) => {
-      console.log("Confirmation:", confirmationNumber);
-    })
-    .on("receipt", (receipt) => {
-      console.log("Receipt:", receipt);
-    })
-    .on("error", (error, receipt) => {
-      console.error("Error:", error);
+    const signer = provider.getSigner();
+    let gas = await contract.estimateGas.mint(quantity, { from: signer.getAddress(), value: normalPrice });
+    gas = Math.round(gas.toNumber() * 1.2);
+    
+    const tx = await contract.connect(signer).mint(quantity, {
+        value: normalPrice,
+        gasLimit: gas,
+        maxFeePerGas: ethers.utils.parseUnits("100000001", "wei"), // 1.5 Gwei
+        maxPriorityFeePerGas: ethers.utils.parseUnits("100000000", "wei"), // 0.5 Gwei
+        type: "0x2"
     });
+
+    try {
+        const receipt = await tx.wait();
+        result.success = true;
+        result.data = receipt;
+    } catch (err) {
+        result.success = false;
+        result.data = err;
+    }
+
+    callback && callback(result);
+    return result;
 }
-
-document.getElementById("connectButton").addEventListener("click", async () => {
-  const userAddress = await connectWallet();
-  displayUserAddress(userAddress);
-  updateTokenPrice();
-});
-
-document.getElementById("mintButton").addEventListener("click", mintTokens);
