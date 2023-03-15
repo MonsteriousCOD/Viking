@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minting dApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+    }
+    #walletInfo {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mint Your Tokens</h1>
+  <div id="walletInfo">
+    <button id="connectButton">Connect Wallet</button>
+    <span id="userAddress">Not connected</span>
+  </div>
+  <div>
+    <label for="mintQuantity">Quantity:</label>
+    <input type="number" id="mintQuantity" min="1" value="1" />
+    <button id="mintButton">Mint</button>
+  </div>
+  <div>
+    <span>Token price: </span>
+    <span id="tokenPrice">Loading...</span>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
