@@ -665,6 +665,7 @@ const ABI = [{
 let web3;
 let contract;
 let userAddress;
+
 // Connecting to Metamask
 async function connect() {
   if (window.ethereum) {
