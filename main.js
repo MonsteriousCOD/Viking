@@ -688,7 +688,7 @@ async function setupWalletConnection(contractAddress, abi, callback) {
   }
 
   const nativeWeb3 = new Web3(window.ethereum);
-  contract = tokenContract;
+  const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
   userAddress = walletProvider.account;
   callback && callback(!!walletProvider.account);
 }
