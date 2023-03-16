@@ -780,30 +780,19 @@ async function updateStats() {
   document.getElementById('pod').innerText = `${podInEth} ETH`;
 }
 
-function connectWallet() {
-  setupWalletConnectionMint(contractAddress, abi).then((connected) => {
-    getUserChain(result => {
-      const goerliChainId = "0x5"; // Ethereum Goerli Testnet Chain ID
-      const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
-
-      if (result === mainnetChainId || result === goerliChainId) {
-        OnConnected();
-      } else {
-        console.log("connected, not on the right chain, add?")
-        if (testnet) {
-          addTestNetwork(nullResp => {
-            OnConnected();
-          })
-        } else {
-          addMainNetwork(nullResp => {
-            OnConnected();
-          })
-        }
-      }
-    })
+async function connectWallet() {
+  await setupWalletConnection(contractAddress, abi);
+  getUserChain(async (result) => {
+    const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
+    if (result !== mainnetChainId) {
+      console.log("Connected, not on the right chain, switching to mainnet");
+      await addMainNetwork();
+      // Reconnect after switching network
+      await setupWalletConnection(contractAddress, abi);
+    }
+    OnConnected();
   });
 }
-
 function OnConnected() {
   connected = true;
   getMints(walletProvider.account, mints => {
