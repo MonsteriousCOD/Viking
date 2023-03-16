@@ -739,10 +739,12 @@ document.getElementById('mintSlider').addEventListener('input', (event) => {
   updatePrice(value);
 });
 
-if (isContractDefined()) {
-  const price = await walletProvider.contract.methods.price().call();
-  const total = walletProvider.web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-  document.getElementById('rangePrice').innerText = `${total} ETH`;
+async function updatePrice(quantity) {
+  if (isContractDefined()) {
+    const price = await contract.methods.price().call();
+    const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
+    document.getElementById('rangePrice').innerText = `${total} ETH`;
+  }
 }
 
 async function updateStats() {
