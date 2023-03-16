@@ -686,7 +686,7 @@ async function addMainNetwork() {
             symbol: 'ETH',
             decimals: 18,
           },
-          rpcUrls: ['https://eth.llamarpc.com'],
+          rpcUrls: ['https://mainnet.infura.io/v3/'],
           blockExplorerUrls: ['https://etherscan.io/'],
         },
       ],
