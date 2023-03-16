@@ -718,26 +718,7 @@ window.addEventListener('load', async () => {
   connectButton.addEventListener('click', async () => {
     await connect();
   });
-});
-document.getElementById('mintSlider').addEventListener('input', (event) => {
-    const value = event.target.value;
-    document.getElementById('rangeValue').innerText = value;
-    updatePrice(value);
-  });
-  
-  async function updatePrice(quantity) {
-    const price = await contract.methods.price().call();
-    const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-    document.getElementById('rangePrice').innerText = `${total} ETH`;
-  }
-  async function updateStats() {
-    const totalSupply = await contract.methods.totalSupply().call();
-    const pod = await contract.methods.pod().call();
-    const podInEth = web3.utils.fromWei(pod, 'ether');
-    document.getElementById('supply').innerText = `${totalSupply} / 10000`;
-    document.getElementById('pod').innerText = `${podInEth} ETH`;
-  }
-  
+
   // Call updateStats() after connecting
   await updateStats();
   
@@ -745,5 +726,25 @@ document.getElementById('mintSlider').addEventListener('input', (event) => {
   setInterval(async () => {
     await updateStats();
   }, 15000);
-  
-  
+});
+
+document.getElementById('mintSlider').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.getElementById('rangeValue').innerText = value;
+    updatePrice(value);
+});
+
+async function updatePrice(quantity) {
+  const price = await contract.methods.price().call();
+  const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
+  document.getElementById('rangePrice').innerText = `${total} ETH`;
+}
+
+async function updateStats() {
+  const totalSupply = await contract.methods.totalSupply().call();
+  const pod = await contract.methods.pod().call();
+  const podInEth = web3.utils.fromWei(pod, 'ether');
+  document.getElementById('supply').innerText = `${totalSupply} / 10000`;
+  document.getElementById('pod').innerText = `${podInEth} ETH`;
+}
+
