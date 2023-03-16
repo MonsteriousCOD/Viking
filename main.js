@@ -698,7 +698,7 @@ async function setupWalletConnection(contractAddress, abi, callback) {
 }
 
 // Add the following event listener here
-window.ethereum.on('accountsChanged', async (accounts) => {
+window.ethereum.addListener('accountsChanged', async (accounts) => {
   userAddress = accounts[0];
   updatePrice(document.getElementById('rangeValue').innerText);
 });
