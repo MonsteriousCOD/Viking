@@ -756,7 +756,7 @@ async function updateStats() {
 }
 
 function connectWallet() {
-  setupWalletConnectionMint(contractAddress, abiContract.abi).then((connected) => {
+  setupWalletConnectionMint(contractAddress, abi).then((connected) => {
     getUserChain(result => {
       const goerliChainId = "0x5"; // Ethereum Goerli Testnet Chain ID
       const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
@@ -789,3 +789,22 @@ function OnConnected() {
     document.getElementById('mintSlider').to = (5 - userMints);
   })
 }
+ function updateSupplyUI(supply, price) {
+      document.getElementById("supply").innerHTML = `${supply} / 10'000`
+      document.getElementById("pod").innerHTML = `${(supply * price).toFixed(3)} ETH`
+    }
+
+ function blinkConnectWallet() {
+      document.getElementById('connectButton').style.color = '#c40000';
+      setTimeout(alertFunc, 1000);
+    }
+
+    function alertFunc() {
+      document.getElementById('connectButton').style.color = '#ffffff';
+    }
+
+    function hexToBytes(hex) {
+      for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substring(c, 2), 16));
+      return bytes;
+    }
