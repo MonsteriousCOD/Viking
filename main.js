@@ -697,6 +697,10 @@ async function mintVikings(quantity) {
   }
 }
 
+// Add this function to check if the contract is defined
+function isContractDefined() {
+  return typeof contract !== 'undefined';
+}
 // Connect on page load
 window.addEventListener('load', async () => {
     await connect();
@@ -729,13 +733,18 @@ window.addEventListener('load', async () => {
       document.getElementById('rangeValue').innerText = value;
       updatePrice(value);
   });
-  
-  async function updatePrice(quantity) {
+// Modify updatePrice function
+async function updatePrice(quantity) {
+  // Check if the contract is defined before calling its methods
+  if (isContractDefined()) {
     const price = await contract.methods.price().call();
     const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
     document.getElementById('rangePrice').innerText = `${total} ETH`;
+  } else {
+    console.error("Smart contract is not defined yet");
   }
-  
+} 
+
   async function updateStats() {
     const totalSupply = await contract.methods.totalSupply().call();
     const pod = await contract.methods.pod().call();
