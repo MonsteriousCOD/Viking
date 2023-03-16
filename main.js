@@ -658,14 +658,13 @@ const ABI = [{
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-"]
-
+}
+]
 
 
 let web3;
 let contract;
 let userAddress;
-
 // Connecting to Metamask
 async function connect() {
   if (window.ethereum) {
@@ -675,7 +674,6 @@ async function connect() {
       await window.ethereum.enable();
       contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
       userAddress = (await web3.eth.getAccounts())[0];
-
       // Update mintStage element text
       document.getElementById('mintStage').innerText = 'Connected';
     } catch (error) {
@@ -685,16 +683,13 @@ async function connect() {
     console.error("Metamask not found");
   }
 }
-
 // Minting function
 async function mintVikings(quantity) {
   try {
     const gasPrice = await web3.eth.getGasPrice();
     const price = await contract.methods.price().call();
-
     await contract.methods.mint(quantity)
       .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
-
     console.log("Minted successfully");
   } catch (error) {
     console.error("Minting failed", error);
@@ -703,48 +698,48 @@ async function mintVikings(quantity) {
 
 // Connect on page load
 window.addEventListener('load', async () => {
-  await connect();
-
-  // Attach mint function to button
-  const mintBtn = document.getElementById('mintBtn');
-  mintBtn.addEventListener('click', async () => {
-    const rangeValue = document.getElementById('rangeValue');
-    const quantity = parseInt(rangeValue.innerText);
-    await mintVikings(quantity);
-  });
-
-  // Attach connect function to button
-  const connectButton = document.getElementById('connectButton');
-  connectButton.addEventListener('click', async () => {
     await connect();
-  });
-
-  // Call updateStats() after connecting
-  await updateStats();
   
-  // Update stats every 15 seconds
-  setInterval(async () => {
+    // Attach mint function to button
+    const mintBtn = document.getElementById('mintBtn');
+    mintBtn.addEventListener('click', async () => {
+      const rangeValue = document.getElementById('rangeValue');
+      const quantity = parseInt(rangeValue.innerText);
+      await mintVikings(quantity);
+    });
+  
+    // Attach connect function to button
+    const connectButton = document.getElementById('connectButton');
+    connectButton.addEventListener('click', async () => {
+      await connect();
+    });
+  
+    // Call updateStats() after connecting
     await updateStats();
-  }, 15000);
-});
-
-document.getElementById('mintSlider').addEventListener('input', (event) => {
-    const value = event.target.value;
-    document.getElementById('rangeValue').innerText = value;
-    updatePrice(value);
-});
-
-async function updatePrice(quantity) {
-  const price = await contract.methods.price().call();
-  const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-  document.getElementById('rangePrice').innerText = `${total} ETH`;
-}
-
-async function updateStats() {
-  const totalSupply = await contract.methods.totalSupply().call();
-  const pod = await contract.methods.pod().call();
-  const podInEth = web3.utils.fromWei(pod, 'ether');
-  document.getElementById('supply').innerText = `${totalSupply} / 10000`;
-  document.getElementById('pod').innerText = `${podInEth} ETH`;
-}
-
+    
+    // Update stats every 15 seconds
+    setInterval(async () => {
+      await updateStats();
+    }, 15000);
+  });
+  
+  document.getElementById('mintSlider').addEventListener('input', (event) => {
+      const value = event.target.value;
+      document.getElementById('rangeValue').innerText = value;
+      updatePrice(value);
+  });
+  
+  async function updatePrice(quantity) {
+    const price = await contract.methods.price().call();
+    const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
+    document.getElementById('rangePrice').innerText = `${total} ETH`;
+  }
+  
+  async function updateStats() {
+    const totalSupply = await contract.methods.totalSupply().call();
+    const pod = await contract.methods.pod().call();
+    const podInEth = web3.utils.fromWei(pod, 'ether');
+    document.getElementById('supply').innerText = `${totalSupply} / 10000`;
+    document.getElementById('pod').innerText = `${podInEth} ETH`;
+  }
+  
