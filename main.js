@@ -658,7 +658,7 @@ const ABI = [{
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-}"]
+}]
 
 
 
