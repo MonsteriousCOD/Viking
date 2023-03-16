@@ -1,3 +1,4 @@
+
 const contractAddress = "0xc5Fdf5aBCdD7E9f9275f46a4ACB27865C83B7B67";
 const abi = [{
     "inputs": [],
@@ -725,15 +726,15 @@ function isContractDefined() {
   return typeof contract !== 'undefined';
 }
 
-const mintBtn = document.getElementById('mintBtn');
+mintBtn = document.getElementById('mintBtn');
 mintBtn.addEventListener('click', async () => {
   const rangeValue = document.getElementById('rangeValue');
   const quantity = parseInt(rangeValue.innerText);
   await mintVikings(quantity);
 });
 
-const connectButton = document.getElementById('connectButton');
-connectButton.addEventListener('click', async () => {
+const mintBtn = document.getElementById('mintBtn');
+mintBtn.addEventListener('click', async () => {
   await setupWalletConnection(contractAddress, abi);
 });
 
@@ -788,7 +789,7 @@ function OnConnected() {
   getMints(walletProvider.account, mints => {
     userMints = mints;
     console.log("Connected, on the right chain, fetching mints: " + mints);
-    document.getElementById("connectButton").innerText = "CONNECTED";
+    document.getElementById("mintBtn").innerText = "CONNECTED";
 
     document.getElementById('mintSlider').to = (5 - userMints);
   })
@@ -799,12 +800,12 @@ function OnConnected() {
     }
 
  function blinkConnectWallet() {
-      document.getElementById('connectButton').style.color = '#c40000';
+      document.getElementById('mintBtn').style.color = '#c40000';
       setTimeout(alertFunc, 1000);
     }
 
     function alertFunc() {
-      document.getElementById('connectButton').style.color = '#ffffff';
+      document.getElementById('mintBtn').style.color = '#ffffff';
     }
 
     function hexToBytes(hex) {
@@ -812,3 +813,4 @@ function OnConnected() {
         bytes.push(parseInt(hex.substring(c, 2), 16));
       return bytes;
     }
+
