@@ -668,6 +668,10 @@ let userAddress;
 
 let walletProvider = {};
 
+async function getUserChain(callback) {
+  const chainId = await walletProvider.web3.eth.getChainId();
+  callback(chainId.toString(16));
+}
 // Connecting to Metamask
 async function setupWalletConnection(contractAddress, abi, callback) {
   if (window.ethereum === undefined) {
