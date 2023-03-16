@@ -754,3 +754,38 @@ async function updateStats() {
   document.getElementById('supply').innerText = `${totalSupply} / 10000`;
   document.getElementById('pod').innerText = `${podInEth} ETH`;
 }
+
+function connectWallet() {
+  setupWalletConnectionMint(contractAddress, abiContract.abi).then((connected) => {
+    getUserChain(result => {
+      const goerliChainId = "0x5"; // Ethereum Goerli Testnet Chain ID
+      const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
+
+      if (result === goerliChainId || result === mainnetChainId) {
+        OnConnected();
+      } else {
+        console.log("connected, not on the right chain, add?")
+        if (testnet) {
+          addTestNetwork(nullResp => {
+            OnConnected();
+          })
+        } else {
+          addMainNetwork(nullResp => {
+            OnConnected();
+          })
+        }
+      }
+    })
+  });
+}
+
+function OnConnected() {
+  connected = true;
+  getMints(walletProvider.account, mints => {
+    userMints = mints;
+    console.log("Connected, on the right chain, fetching mints: " + mints);
+    document.getElementById("connectButton").innerText = "CONNECTED";
+
+    document.getElementById('mintSlider').to = (5 - userMints);
+  })
+}
