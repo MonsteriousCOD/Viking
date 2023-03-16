@@ -765,7 +765,7 @@ function connectWallet() {
       const goerliChainId = "0x5"; // Ethereum Goerli Testnet Chain ID
       const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
 
-      if (result === goerliChainId || result === mainnetChainId) {
+      if (result === mainnetChainId || result === goerliChainId) {
         OnConnected();
       } else {
         console.log("connected, not on the right chain, add?")
