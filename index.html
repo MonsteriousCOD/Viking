@@ -140,65 +140,80 @@
     </div>
 
  </main>
- <script>
+ 
 <script type="module">
   import contractABI from "./contractABI.js";
 
-  // Your existing JavaScript code goes here
+let contractAddress = "0xc5fdf5abcdd7e9f9275f46a4acb27865c83b7b67";
 
+const queryString = window.location;
+let testnet = queryString.toString().includes('testnet');
 
+console.log("You are on " + queryString);
+let testnetAlchemyUrl = "wss://eth-goerli.g.alchemy.com/v2/rbmXgfY7YvhIgVXMcnhn5upiIW3gj6a2";
+let mainnetAlchemyUrl = "wss://eth-mainnet.ws.alchemyapi.io/v2/8GDOyfUM_cfMuwCF4CzC1LfA41YTw-8J";
+let alchemyUrl = testnet ? testnetAlchemyUrl : mainnetAlchemyUrl;
+console.log(alchemyUrl);
+document.getElementById('connectButton').addEventListener('click', function (e) { connectWallet(); });
+document.getElementById('mintBtn').addEventListener('click', function (e) { mint(); });
 
-    // Your contract address here
-    const contractAddress = "0xc5Fdf5aBCdD7E9f9275f46a4ACB27865C83B7B67";
+let mintSlider = document.getElementById('mintSlider');
+mintSlider.addEventListener('input', function (e) {
+  document.getElementById('rangePrice').innerText = ((Math.round(mintSlider.value * tokenPrice * 10000) / 10000).toString() + " ETH");
+  document.getElementById('rangeValue').innerText = (mintSlider.value).toString();
+});
 
-    async function mintTokens(signer, numberOfTokens) {
-      const contract = new ethers.Contract(contractAddress, contractABI, signer);
-      const mintPrice = ethers.utils.parseEther("0.01"); // Replace 0.01 with the actual mint price in ETH
-      const totalCost = mintPrice.mul(numberOfTokens);
+let tokenPrice = 0;
+let userMints = 0;
+let connected = false;
+let supply = 0;
+_setupAlchemyConnectionMint(contractAddress, abiContract.abi, alchemyUrl).then(() => {
+  console.log("Correctly setup alchemyProvider and contract at: " + contractAddress);
+  _getPublicPrice((price) => {
+    tokenPrice = ToEth(price);
+    _getSupply((supplyResult) => {
+      supply = supplyResult;
+      updateSupplyUI(supplyResult, tokenPrice);
+      subscribeSupply();
+    })
+  })
+});
 
-      try {
-        const tx = await contract.mint(numberOfTokens, { value: totalCost });
-        console.log("Transaction sent:", tx.hash);
-        await tx.wait();
-        console.log("Minting completed!");
-      } catch (error) {
-        console.error("Error minting tokens:", error);
+function connectWallet() {
+  setupWalletConnectionMint(contractAddress, abiContract.abi).then((connected) => {
+    getUserChain(result => {
+      if (result == arbitrumGoerliChainId) {
+        OnConnected();
       }
-    }
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const signer = provider.getSigner();
-          const address = await signer.getAddress();
-          console.log("Connected account:", address);
-          return { success: true, address: address };
-        } catch (error) {
-          console.error("User denied account access");
-          return { success: false, error: "User denied account access" };
+      else {
+        console.log("connected, not on the right chain, add?")
+        if (testnet) {
+          addTestNetwork(nullResp => {
+            OnConnected();
+          })
         }
-      } else {
-        console.error("No web3 provider detected");
-        return { success: false, error: "No web3 provider detected" };
+        else {
+          addMainNetwork(nullResp => {
+            OnConnected();
+          })
+        }
       }
-    }
-  document.getElementById("connectButton").addEventListener("click", async () => {
-    const result = await connectWallet();
-    if (result.success) {
-      console.log("Wallet connected:", result.address);
-    } else {
-      console.error("Error connecting wallet:", result.error);
-    }
+    })
   });
-     document.getElementById("mintBtn").addEventListener("click", async () => {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const numberOfTokens = parseInt(document.getElementById("rangeValue").innerText);
+}
 
-      await mintTokens(signer, numberOfTokens);
-    });
-  </script>
-</body>
+function OnConnected() {
+  connected = true;
+  getMints(walletProvider.account, mints => {
+    userMints = mints;
+    console.log("Connected, on the right chain, fetching mints: " + mints);
+    document.getElementById("connectButton").innerText = "CONNECTED";
 
-</html>
+    document.getElementById('mintSlider').to = (5 - userMints);
+  })
+}
+
+function updateSupplyUI(supply, price) {
+  document.getElementById("supply").innerHTML = `${supply} / 10'000`
+  document.getElementById("pod").innerHTML = `${(supply * price).toFixed(3)} ETH`
+}
