@@ -1,5 +1,5 @@
-const CONTRACT_ADDRESS = "0x8c391a28A2511869A50B6AC6b282Cc957dE73003";
-const ABI = [{
+const contractAddress = "0x8c391a28A2511869A50B6AC6b282Cc957dE73003";
+const abi = [{
     "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
@@ -822,33 +822,21 @@ async function mintVikings(quantity) {
 function isContractDefined() {
   return typeof contract !== 'undefined';
 }
-// Connect on page load
-window.addEventListener('load', async () => {
-    await connect();
-  
+
     // Attach mint function to button
     const mintBtn = document.getElementById('mintBtn');
     mintBtn.addEventListener('click', async () => {
-      const rangeValue = document.getElementById('rangeValue');
-      const quantity = parseInt(rangeValue.innerText);
-      await mintVikings(quantity);
+        const rangeValue = document.getElementById('rangeValue');
+        const quantity = parseInt(rangeValue.innerText);
+        await mintVikings(quantity);
     });
   
     // Attach connect function to button
     const connectButton = document.getElementById('connectButton');
     connectButton.addEventListener('click', async () => {
-      await connect();
+        await setupWalletConnection(contractAddress, abi);
     });
-  
-    // Call updateStats() after connecting
-    await updateStats();
-    
-    // Update stats every 15 seconds
-    setInterval(async () => {
-      await updateStats();
-    }, 15000);
-  });
-  
+         
   document.getElementById('mintSlider').addEventListener('input', (event) => {
       const value = event.target.value;
       document.getElementById('rangeValue').innerText = value;
@@ -856,15 +844,13 @@ window.addEventListener('load', async () => {
   });
 // Modify updatePrice function
 async function updatePrice(quantity) {
-  // Check if the contract is defined before calling its methods
-  if (isContractDefined()) {
-    const price = await contract.methods.price().call();
-    const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-    document.getElementById('rangePrice').innerText = `${total} ETH`;
-  } else {
-    console.error("Smart contract is not defined yet");
+    // Check if the contract is defined before calling its methods
+    if (isContractDefined()) {
+      const price = await contract.methods.price().call();
+      const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
+      document.getElementById('rangePrice').innerText = `${total} ETH`;
+    }
   }
-} 
 
   async function updateStats() {
     const totalSupply = await contract.methods.totalSupply().call();
