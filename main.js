@@ -1,4 +1,3 @@
-
 const contractAddress = "0xc5Fdf5aBCdD7E9f9275f46a4ACB27865C83B7B67";
 const abi = [{
     "inputs": [],
@@ -673,6 +672,29 @@ async function getUserChain(callback) {
   const chainId = await walletProvider.web3.eth.getChainId();
   callback(chainId.toString(16));
 }
+
+async function addMainNetwork() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [
+        {
+          chainId: '0x1', // Ethereum Mainnet Chain ID
+          chainName: 'Ethereum Mainnet',
+          nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://eth.llamarpc.com'],
+          blockExplorerUrls: ['https://etherscan.io/'],
+        },
+      ],
+    });
+  } catch (error) {
+    console.error('Error adding network:', error);
+  }
+}
 // Connecting to Metamask
 async function setupWalletConnection(contractAddress, abi, callback) {
   if (window.ethereum === undefined) {
@@ -726,15 +748,15 @@ function isContractDefined() {
   return typeof contract !== 'undefined';
 }
 
-mintBtn = document.getElementById('mintBtn');
+const mintBtn = document.getElementById('mintBtn');
 mintBtn.addEventListener('click', async () => {
   const rangeValue = document.getElementById('rangeValue');
   const quantity = parseInt(rangeValue.innerText);
   await mintVikings(quantity);
 });
 
-const mintBtn = document.getElementById('mintBtn');
-mintBtn.addEventListener('click', async () => {
+const connectButton = document.getElementById('connectButton');
+connectButton.addEventListener('click', async () => {
   await setupWalletConnection(contractAddress, abi);
 });
 
@@ -789,7 +811,7 @@ function OnConnected() {
   getMints(walletProvider.account, mints => {
     userMints = mints;
     console.log("Connected, on the right chain, fetching mints: " + mints);
-    document.getElementById("mintBtn").innerText = "CONNECTED";
+    document.getElementById("connectButton").innerText = "CONNECTED";
 
     document.getElementById('mintSlider').to = (5 - userMints);
   })
@@ -800,12 +822,12 @@ function OnConnected() {
     }
 
  function blinkConnectWallet() {
-      document.getElementById('mintBtn').style.color = '#c40000';
+      document.getElementById('connectButton').style.color = '#c40000';
       setTimeout(alertFunc, 1000);
     }
 
     function alertFunc() {
-      document.getElementById('mintBtn').style.color = '#ffffff';
+      document.getElementById('connectButton').style.color = '#ffffff';
     }
 
     function hexToBytes(hex) {
@@ -813,4 +835,3 @@ function OnConnected() {
         bytes.push(parseInt(hex.substring(c, 2), 16));
       return bytes;
     }
-
