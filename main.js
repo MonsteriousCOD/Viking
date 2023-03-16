@@ -676,25 +676,21 @@ async function setupWalletConnection(contractAddress, abi, callback) {
     return false;
   }
 
-  if (!isEthAddress()) {
-    const isEnabled = await window.ethereum.enable();
-    const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    if (isEnabled) {
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      walletProvider.account = accounts[0];
-    }
-  }
-  if (isEthAddress()) {
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  walletProvider.account = accounts[0];
+
+  if (walletProvider.account) {
     console.log(walletProvider.account);
 
-    const nativeWeb3 = web3Provider;
+    const nativeWeb3 = new Web3(window.ethereum);
     const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
     walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
-  }   
+  }
+
   web3 = nativeWeb3;
   contract = tokenContract;
   userAddress = walletProvider.account;
-  callback && callback(isEthAddress());
+  callback && callback(!!walletProvider.account);
 }
 
 // Add the following event listener here
@@ -707,167 +703,52 @@ if (window.ethereum && typeof window.ethereum.on === 'function') {
   console.warn('Event listener "accountsChanged" not available for this wallet.');
 }
 
-    
-   
-async function setupWalletConnectionMint(contractAddress, abi, callback) {
-    if (window.ethereum === undefined) {
-        callback && callback(false);
-        console.log("No eth installed");
-        return false;
-    }
-
-    if (!isEthAddress()) {
-        const isEnabled = await window.ethereum.enable();
-        const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (isEnabled) {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            walletProvider.account = accounts[0];
-        }
-    }
-    if (isEthAddress()) {
-        console.log(walletProvider.account);
-
-        const nativeWeb3 = new Web3(window.ethereum);
-        const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
-        walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
-    }
-
-    callback && callback(isEthAddress());
-
-    return isEthAddress();
-
-}
-function isEthAddress() {
-    return (
-        !!walletProvider.account && /^(0x)?[0-9a-f]{40}$/i.test(walletProvider.account)
-    );
-}
-//general methods\\
-async function getBlockByNumber(nr, callback) {
-    const result = await window.ethereum.request({
-        params: [nr, false],
-        method: 'eth_getBlockByNumber',
-    });
-    callback && callback(result);
-    return result;
-}
-async function getBalance(callback) {
-    const result = await window.ethereum.request({
-        method: 'eth_getBalance',
-    });
-    callback && callback(result);
-    return result;
-}
-async function getUserChain(callback) {
-    const result = await window.ethereum.request({
-        method: 'eth_chainId',
-    });
-    callback && callback(result);
-    return result;
-}
-
-async function addTestNetwork(callback) {
-  const result = await window.ethereum.request({
-    method: "wallet_addEthereumChain",
-    params: [
-      {
-        chainId: "0x5",
-        rpcUrls: ["https://eth-goerli.public.blastapi.io"],
-        chainName: "Ethereum Goerli Testnet",
-        nativeCurrency: {
-          name: "GoerliETH",
-          symbol: "ETH",
-          decimals: 18,
-        },
-        blockExplorerUrls: ["https://goerli.etherscan.io/"],
-      },
-    ],
-  });
-  console.log(result);
-  callback && callback(result);
-  return result;
-}
-
-async function addMainNetwork(callback) {
-  const result = await window.ethereum.request({
-    method: "wallet_addEthereumChain",
-    params: [
-      {
-        chainId: "0x1",
-        rpcUrls: ["https://eth.llamarpc.com"],
-        chainName: "Ethereum Mainnet",
-        nativeCurrency: {
-          name: "ETH",
-          symbol: "ETH",
-          decimals: 18,
-        },
-        blockExplorerUrls: ["https://etherscan.io/"],
-      },
-    ],
-  });
-  callback && callback(result);
-  return result;
-}
-async function getBlockNumber(callback) {
-    const result = await window.ethereum.request({
-        method: 'eth_blockNumber',
-    });
-    callback && callback(result);
-    return result;
-}
-
-// Minting function
 async function mintVikings(quantity) {
-    try {
-      const gasPrice = await walletProvider.web3.eth.getGasPrice();
-      const price = await contract.methods.price().call();
-      await contract.methods.mint(quantity)
-        .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
-      console.log("Minted successfully");
-    } catch (error) {
-      console.error("Minting failed", error);
-    }
+  try {
+    const gasPrice = await walletProvider.web3.eth.getGasPrice();
+    const price = await contract.methods.price().call();
+    await contract.methods.mint(quantity)
+      .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
+    console.log("Minted successfully");
+  } catch (error) {
+    console.error("Minting failed", error);
   }
-  
+}
 
-// Add this function to check if the contract is defined
 function isContractDefined() {
   return typeof contract !== 'undefined';
 }
 
-    // Attach mint function to button
-    const mintBtn = document.getElementById('mintBtn');
-    mintBtn.addEventListener('click', async () => {
-        const rangeValue = document.getElementById('rangeValue');
-        const quantity = parseInt(rangeValue.innerText);
-        await mintVikings(quantity);
-    });
-  
-    // Attach connect function to button
-    const connectButton = document.getElementById('connectButton');
-    connectButton.addEventListener('click', async () => {
-        await setupWalletConnection(contractAddress, abi);
-    });
-         
-  document.getElementById('mintSlider').addEventListener('input', (event) => {
-      const value = event.target.value;
-      document.getElementById('rangeValue').innerText = value;
-      updatePrice(value);
-  });
-// Modify updatePrice function
-async function updatePrice(quantity) {
-    // Check if the contract is defined before calling its methods
-    if (isContractDefined()) {
-      const price = await contract.methods.price().call();
-      const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-      document.getElementById('rangePrice').innerText = `${total} ETH`;
-    }
-  }
+const mintBtn = document.getElementById('mintBtn');
+mintBtn.addEventListener('click', async () => {
+  const rangeValue = document.getElementById('rangeValue');
+  const quantity = parseInt(rangeValue.innerText);
+  await mintVikings(quantity);
+});
 
-  async function updateStats() {
-    const totalSupply = await contract.methods.totalSupply().call();
-    const pod = await contract.methods.pod().call();
-    const podInEth = web3.utils.fromWei(pod, 'ether');
-    document.getElementById('supply').innerText = `${totalSupply} / 10000`;
-    document.getElementById('pod').innerText = `${podInEth} ETH`;
+const connectButton = document.getElementById('connectButton');
+connectButton.addEventListener('click', async () => {
+  await setupWalletConnection(contractAddress, abi);
+});
+
+document.getElementById('mintSlider').addEventListener('input', (event) => {
+  const value = event.target.value;
+  document.getElementById('rangeValue').innerText = value;
+  updatePrice(value);
+});
+
+async function updatePrice(quantity) {
+  if (isContractDefined()) {
+    const price = await contract.methods.price().call();
+    const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
+    document.getElementById('rangePrice').innerText = `${total} ETH`;
   }
+}
+
+async function updateStats() {
+  const totalSupply = await contract.methods.totalSupply().call();
+  const pod = await contract.methods.pod().call();
+  const podInEth = web3.utils.fromWei(pod, 'ether');
+  document.getElementById('supply').innerText = `${totalSupply} / 10000`;
+  document.getElementById('pod').innerText = `${podInEth} ETH`;
+}
