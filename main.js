@@ -687,7 +687,7 @@ async function setupWalletConnection(contractAddress, abi, callback) {
   if (isEthAddress()) {
     console.log(walletProvider.account);
 
-    const nativeWeb3 = new Web3(window.ethereum);
+    const nativeWeb3 = web3Provider;
     const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
     walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
   }   
@@ -818,16 +818,17 @@ async function getBlockNumber(callback) {
 
 // Minting function
 async function mintVikings(quantity) {
-  try {
-    const gasPrice = await web3.eth.getGasPrice();
-    const price = await contract.methods.price().call();
-    await contract.methods.mint(quantity)
-      .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
-    console.log("Minted successfully");
-  } catch (error) {
-    console.error("Minting failed", error);
+    try {
+      const gasPrice = await walletProvider.web3.eth.getGasPrice();
+      const price = await contract.methods.price().call();
+      await contract.methods.mint(quantity)
+        .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
+      console.log("Minted successfully");
+    } catch (error) {
+      console.error("Minting failed", error);
+    }
   }
-}
+  
 
 // Add this function to check if the contract is defined
 function isContractDefined() {
@@ -870,4 +871,3 @@ async function updatePrice(quantity) {
     document.getElementById('supply').innerText = `${totalSupply} / 10000`;
     document.getElementById('pod').innerText = `${podInEth} ETH`;
   }
-  
