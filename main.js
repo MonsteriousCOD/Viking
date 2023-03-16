@@ -666,24 +666,145 @@ let web3;
 let contract;
 let userAddress;
 
+let walletProvider = {};
+
+
 // Connecting to Metamask
-async function connect() {
-  if (window.ethereum) {
-    window.web3 = new Web3(window.ethereum);
-    web3 = window.web3;
-    try {
-      await window.ethereum.enable();
-      contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
-      userAddress = (await web3.eth.getAccounts())[0];
-      // Update mintStage element text
-      document.getElementById('mintStage').innerText = 'Connected';
-    } catch (error) {
-      console.error("User denied access");
+async function setupWalletConnection(contractAddress, abi, callback) {
+    if (window.ethereum === undefined) {
+        callback && callback(false);
+        console.log("No eth installed");
+        return false;
     }
-  } else {
-    console.error("Metamask not found");
-  }
+
+    if (!isEthAddress()) {
+        const isEnabled = await window.ethereum.enable();
+        const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (isEnabled) {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            walletProvider.account = accounts[0];
+        }
+    }
+    if (isEthAddress()) {
+        console.log(walletProvider.account);
+
+        const nativeWeb3 = new Web3(window.ethereum);
+        const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
+        walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
+    }
+
+    callback && callback(isEthAddress());
+
+    return isEthAddress();
+
 }
+async function setupWalletConnectionMint(contractAddress, abi, callback) {
+    if (window.ethereum === undefined) {
+        callback && callback(false);
+        console.log("No eth installed");
+        return false;
+    }
+
+    if (!isEthAddress()) {
+        const isEnabled = await window.ethereum.enable();
+        const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (isEnabled) {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            walletProvider.account = accounts[0];
+        }
+    }
+    if (isEthAddress()) {
+        console.log(walletProvider.account);
+
+        const nativeWeb3 = new Web3(window.ethereum);
+        const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
+        walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
+    }
+
+    callback && callback(isEthAddress());
+
+    return isEthAddress();
+
+}
+function isEthAddress() {
+    return (
+        !!walletProvider.account && /^(0x)?[0-9a-f]{40}$/i.test(walletProvider.account)
+    );
+}
+//general methods\\
+async function getBlockByNumber(nr, callback) {
+    const result = await window.ethereum.request({
+        params: [nr, false],
+        method: 'eth_getBlockByNumber',
+    });
+    callback && callback(result);
+    return result;
+}
+async function getBalance(callback) {
+    const result = await window.ethereum.request({
+        method: 'eth_getBalance',
+    });
+    callback && callback(result);
+    return result;
+}
+async function getUserChain(callback) {
+    const result = await window.ethereum.request({
+        method: 'eth_chainId',
+    });
+    callback && callback(result);
+    return result;
+}
+
+async function addTestNetwork(callback) {
+  const result = await window.ethereum.request({
+    method: "wallet_addEthereumChain",
+    params: [
+      {
+        chainId: "0x5",
+        rpcUrls: ["https://goerli.infura.io/v3/YOUR-PROJECT-ID"],
+        chainName: "Ethereum Goerli Testnet",
+        nativeCurrency: {
+          name: "GoerliETH",
+          symbol: "ETH",
+          decimals: 18,
+        },
+        blockExplorerUrls: ["https://goerli.etherscan.io/"],
+      },
+    ],
+  });
+  console.log(result);
+  callback && callback(result);
+  return result;
+}
+
+async function addMainNetwork(callback) {
+  const result = await window.ethereum.request({
+    method: "wallet_addEthereumChain",
+    params: [
+      {
+        chainId: "0x1",
+        rpcUrls: ["https://mainnet.infura.io/v3/YOUR-PROJECT-ID"],
+        chainName: "Ethereum Mainnet",
+        nativeCurrency: {
+          name: "ETH",
+          symbol: "ETH",
+          decimals: 18,
+        },
+        blockExplorerUrls: ["https://etherscan.io/"],
+      },
+    ],
+  });
+  callback && callback(result);
+  return result;
+}
+async function getBlockNumber(callback) {
+    const result = await window.ethereum.request({
+        method: 'eth_blockNumber',
+    });
+    callback && callback(result);
+    return result;
+}
+
 // Minting function
 async function mintVikings(quantity) {
   try {
