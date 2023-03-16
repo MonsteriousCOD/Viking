@@ -695,7 +695,7 @@ async function addMainNetwork() {
     console.error('Error adding network:', error);
   }
 }
-// Connecting to Metamask
+
 async function setupWalletConnection(contractAddress, abi, callback) {
   if (window.ethereum === undefined) {
     callback && callback(false);
@@ -713,7 +713,6 @@ async function setupWalletConnection(contractAddress, abi, callback) {
     const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
     walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
 
-    // Assign web3 and contract here
     web3 = nativeWeb3;
     contract = tokenContract;
   }
@@ -722,7 +721,6 @@ async function setupWalletConnection(contractAddress, abi, callback) {
   callback && callback(!!walletProvider.account);
 }
 
-// Add the following event listener here
 if (window.ethereum && typeof window.ethereum.on === 'function') {
   window.ethereum.on('accountsChanged', async (accounts) => {
     userAddress = accounts[0];
@@ -757,7 +755,7 @@ mintBtn.addEventListener('click', async () => {
 
 const connectButton = document.getElementById('connectButton');
 connectButton.addEventListener('click', async () => {
-  await setupWalletConnection(contractAddress, abi);
+  await connectWallet();
 });
 
 document.getElementById('mintSlider').addEventListener('input', (event) => {
