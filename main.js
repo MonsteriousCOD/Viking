@@ -658,7 +658,9 @@ const ABI = [{
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-}"];
+}"]
+
+
 
 let web3;
 let contract;
