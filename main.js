@@ -668,36 +668,43 @@ let userAddress;
 
 let walletProvider = {};
 
-
 // Connecting to Metamask
 async function setupWalletConnection(contractAddress, abi, callback) {
-    if (window.ethereum === undefined) {
-        callback && callback(false);
-        console.log("No eth installed");
-        return false;
+  if (window.ethereum === undefined) {
+    callback && callback(false);
+    console.log("No eth installed");
+    return false;
+  }
+
+  if (!isEthAddress()) {
+    const isEnabled = await window.ethereum.enable();
+    const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (isEnabled) {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      walletProvider.account = accounts[0];
     }
+  }
+  if (isEthAddress()) {
+    console.log(walletProvider.account);
 
-    if (!isEthAddress()) {
-        const isEnabled = await window.ethereum.enable();
-        const enable = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (isEnabled) {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            walletProvider.account = accounts[0];
-        }
-    }
-    if (isEthAddress()) {
-        console.log(walletProvider.account);
-
-        const nativeWeb3 = new Web3(window.ethereum);
-        const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
-        walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
-    }
-
-    callback && callback(isEthAddress());
-
-    return isEthAddress();
-
+    const nativeWeb3 = new Web3(window.ethereum);
+    const tokenContract = new nativeWeb3.eth.Contract(abi, contractAddress);
+    walletProvider = { account: walletProvider.account, contract: tokenContract, web3: nativeWeb3 };
+  }   
+  web3 = nativeWeb3;
+  contract = tokenContract;
+  userAddress = walletProvider.account;
+  callback && callback(isEthAddress());
 }
+
+// Add the following event listener here
+window.ethereum.on('accountsChanged', async (accounts) => {
+  userAddress = accounts[0];
+  updatePrice(document.getElementById('rangeValue').innerText);
+});
+
+    
+   
 async function setupWalletConnectionMint(contractAddress, abi, callback) {
     if (window.ethereum === undefined) {
         callback && callback(false);
