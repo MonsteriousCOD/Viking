@@ -761,7 +761,7 @@ async function addTestNetwork(callback) {
     params: [
       {
         chainId: "0x5",
-        rpcUrls: ["https://goerli.infura.io/v3/YOUR-PROJECT-ID"],
+        rpcUrls: ["https://eth-goerli.public.blastapi.io"],
         chainName: "Ethereum Goerli Testnet",
         nativeCurrency: {
           name: "GoerliETH",
@@ -783,7 +783,7 @@ async function addMainNetwork(callback) {
     params: [
       {
         chainId: "0x1",
-        rpcUrls: ["https://mainnet.infura.io/v3/YOUR-PROJECT-ID"],
+        rpcUrls: ["https://eth.llamarpc.com"],
         chainName: "Ethereum Mainnet",
         nativeCurrency: {
           name: "ETH",
