@@ -720,6 +720,16 @@ async function setupWalletConnection(contractAddress, abi, callback) {
   callback && callback(!!walletProvider.account);
 }
 
+if (window.ethereum && typeof window.ethereum.on === 'function') {
+  window.ethereum.on('accountsChanged', async (accounts) => {
+    userAddress = accounts[0];
+    updatePrice(document.getElementById('rangeValue').innerText);
+  });
+} else {
+  console.warn('Event listener "accountsChanged" not available for this wallet.');
+}
+
+
 async function mintVikings(quantity) {
   const errorMessageElement = document.getElementById("error-message");
   errorMessageElement.style.display = "none";
@@ -753,26 +763,10 @@ function isContractDefined() {
   return typeof contract !== 'undefined';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const mintBtn = document.getElementById('mintBtn');
-  mintBtn.addEventListener('click', async () => {
-    const rangeValue = document.getElementById('rangeValue');
-    const quantity = parseInt(rangeValue.innerText);
-    await mintVikings(quantity);
-  });
-
-  const connectButton = document.getElementById('connectButton');
-  connectButton.addEventListener('click', async () => {
-    await connectWallet();
-  });
-
 document.getElementById('mintSlider').addEventListener('input', (event) => {
-    const value = event.target.value;
-    document.getElementById('rangeValue').innerText = value;
-    updatePrice(value);
-  });
-
-  connectWallet();
+  const value = event.target.value;
+  document.getElementById('rangeValue').innerText = value;
+  updatePrice(value);
 });
 
 async function updatePrice(quantity) {
@@ -805,6 +799,7 @@ async function connectWallet() {
   updateUI();
 }
 
+
 function updateUI() {
   if (userAddress) {
     document.getElementById('connectButton').innerText = 'CONNECTED';
@@ -819,17 +814,17 @@ window.addEventListener('DOMContentLoaded', () => {
   updateUI();
 });
 
- function blinkConnectWallet() {
-      document.getElementById('connectButton').style.color = '#c40000';
-      setTimeout(alertFunc, 1000);
-    }
+function blinkConnectWallet() {
+  document.getElementById('connectButton').style.color = '#c40000';
+  setTimeout(alertFunc, 1000);
+}
 
-    function alertFunc() {
-      document.getElementById('connectButton').style.color = '#ffffff';
-    }
+function alertFunc() {
+  document.getElementById('connectButton').style.color = '#ffffff';
+}
 
-    function hexToBytes(hex) {
-      for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substring(c, 2), 16));
-      return bytes;
-    }
+function hexToBytes(hex) {
+  for (var bytes = [], c = 0; c < hex.length; c += 2)
+    bytes.push(parseInt(hex.substring(c, c + 2), 16));
+  return bytes;
+}
