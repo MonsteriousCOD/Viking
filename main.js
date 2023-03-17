@@ -740,14 +740,16 @@ async function mintVikings(quantity,) {
   errorMessageElement.style.display = "none";
   document.getElementById('congratsContainer').style.display = 'none';
   
-
   try {
     const gasPrice = await walletProvider.web3.eth.getGasPrice();
     const price = await contract.methods.price().call();
     await contract.methods.mint(quantity)
-      .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
-    document.getElementById('congratsContainer').style.display = 'block';
-    console.log("Minted successfully");
+      .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice })
+      .then(() => {
+        document.getElementById('congratsContainer').style.display = 'block';
+        console.log("Minted successfully");
+        updateStats(); // Update the stats after minting
+      });
   } catch (error) {
     document.getElementById('congratsContainer').style.display = 'none';
     console.error(error);
@@ -830,7 +832,7 @@ function updateUI() {
     document.getElementById('connectButton').innerText = 'CONNECT';
   }
   updatePrice(document.getElementById('rangeValue').innerText);
-  updateStats();
+  updateStats(); // Call updateStats here to update the stats
 }
 
 window.addEventListener('DOMContentLoaded', () => {
