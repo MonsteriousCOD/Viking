@@ -731,6 +731,9 @@ if (window.ethereum && typeof window.ethereum.on === 'function') {
 }
 
 async function mintVikings(quantity) {
+  const errorMessageElement = document.getElementById("error-message");
+  errorMessageElement.style.display = "none";
+
   try {
     const gasPrice = await walletProvider.web3.eth.getGasPrice();
     const price = await contract.methods.price().call();
@@ -739,6 +742,8 @@ async function mintVikings(quantity) {
     console.log("Minted successfully");
   } catch (error) {
     console.error("Minting failed", error);
+    errorMessageElement.innerText = "Minting failed: " + error.message;
+    errorMessageElement.style.display = "block";
   }
 }
 
@@ -768,7 +773,7 @@ async function updatePrice(quantity) {
   if (isContractDefined()) {
     const price = await contract.methods.price().call();
     const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-    document.getElementById('rangePrice').innerText = `${total} ETH`;
+    document.getElementById('priceValue').innerText = total;
   }
 }
 
@@ -781,17 +786,17 @@ async function updateStats() {
 }
 
 async function connectWallet() {
-  await setupWalletConnection(contractAddress, abi);
-  getUserChain(async (result) => {
-    const mainnetChainId = "0x1"; // Ethereum Mainnet Chain ID
-    if (result !== mainnetChainId) {
-      console.log("Connected, not on the right chain, switching to mainnet");
-      await addMainNetwork();
-      // Reconnect after switching network
-      await setupWalletConnection(contractAddress, abi);
+  await setupWalletConnection(contractAddress, abi, (isConnected) => {
+    if (isConnected) {
+      getUserChain((chain) => {
+        if (chain !== '1') {
+          addMainNetwork();
+        }
+      });
     }
-    OnConnected();
   });
+  updateUI();
+}
 }
 function OnConnected() {
   connected = true;
@@ -803,10 +808,23 @@ function OnConnected() {
     document.getElementById('mintSlider').to = (5 - userMints);
   })
 }
- function updateSupplyUI(supply, price) {
-      document.getElementById("supply").innerHTML = `${supply} / 10'000`
-      document.getElementById("pod").innerHTML = `${(supply * price).toFixed(3)} ETH`
-    }
+ function updateUI() {
+  const isConnected = !!userAddress;
+
+  document.getElementById('connectButton').style.display = isConnected ? 'none' : 'block';
+  document.getElementById('mintBtn').style.display = isConnected ? 'block' : 'none';
+  document.getElementById('mintSlider').style.display = isConnected ? 'block' : 'none';
+  document.getElementById('rangeValue').style.display = isConnected ? 'block' : 'none';
+  document.getElementById('priceValue').style.display = isConnected ? 'block' : 'none';
+
+  if (isConnected) {
+    updatePrice(document.getElementById('rangeValue').innerText);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateUI();
+});
 
  function blinkConnectWallet() {
       document.getElementById('connectButton').style.color = '#c40000';
