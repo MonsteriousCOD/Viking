@@ -661,16 +661,15 @@ const abi = [{
 }
 ]
 
-
 let web3;
 let contract;
 let userAddress;
 
 let walletProvider = {};
 
-async function getUserChain(callback) {
+async function getUserChain() {
   const chainId = await walletProvider.web3.eth.getChainId();
-  callback(chainId.toString(16));
+  return chainId.toString(16);
 }
 
 async function addMainNetwork() {
@@ -702,12 +701,7 @@ async function setupWalletConnection(contractAddress, abi, callback) {
     console.log("No eth installed");
     return false;
   }
-if (window.ethereum && typeof window.ethereum.on === 'function') {
-  // ...
-} else {
-  console.warn('Event listener "accountsChanged" not available for this wallet.');
-}
-    
+
   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
   walletProvider.account = accounts[0];
 
@@ -735,11 +729,17 @@ if (window.ethereum && typeof window.ethereum.on === 'function') {
   console.warn('Event listener "accountsChanged" not available for this wallet.');
 }
 
-async function mintVikings(quantity,) {
+async function mintVikings(quantity) {
   const errorMessageElement = document.getElementById("error-message");
   errorMessageElement.style.display = "none";
   document.getElementById('congratsContainer').style.display = 'none';
-  
+
+  const currentChain = await getUserChain();
+  if (currentChain !== '1') {
+    await addMainNetwork(); // Request the user to switch to the correct network
+    return;
+  }
+
   try {
     const gasPrice = await walletProvider.web3.eth.getGasPrice();
     const price = await contract.methods.price().call();
@@ -805,10 +805,10 @@ async function updateStats() {
 async function connectWallet() {
   await setupWalletConnection(contractAddress, abi, (isConnected) => {
     if (isConnected) {
-      getUserChain((chain) => {
-        if (chain !== '1') {
-          addMainNetwork();
-        }
+      const chain = await getUserChain();
+  if (chain !== '1') {
+    addMainNetwork();
+  }
       });
     }
   });
