@@ -789,7 +789,7 @@ async function updatePrice(quantity) {
 async function updateStats() {
   if (isContractDefined()) {
     const totalSupply = await contract.methods.totalSupply().call();
-    const pod = await contract.methods.pod().call();
+    const pod = await contract.methods.totalSupply().call();
     const podInEth = web3.utils.fromWei(pod, 'ether');
     document.getElementById('supply').innerText = `${totalSupply} / 10000`;
     document.getElementById('pod').innerText = `${podInEth} ETH`;
