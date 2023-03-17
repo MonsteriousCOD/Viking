@@ -735,18 +735,22 @@ if (window.ethereum && typeof window.ethereum.on === 'function') {
   console.warn('Event listener "accountsChanged" not available for this wallet.');
 }
 
-async function mintVikings(quantity) {
+async function mintVikings(quantity,) {
   const errorMessageElement = document.getElementById("error-message");
   errorMessageElement.style.display = "none";
+  document.getElementById('congratsContainer').style.display = 'none';
+  
 
   try {
     const gasPrice = await walletProvider.web3.eth.getGasPrice();
     const price = await contract.methods.price().call();
     await contract.methods.mint(quantity)
       .send({ from: userAddress, value: quantity * price, gasPrice: gasPrice });
+    document.getElementById('congratsContainer').style.display = 'block';
     console.log("Minted successfully");
   } catch (error) {
-    console.error("Minting failed", error);
+    document.getElementById('congratsContainer').style.display = 'none';
+    console.error(error);
     errorMessageElement.innerText = "Minting failed: " + error.message;
     errorMessageElement.style.display = "block";
   }
@@ -789,7 +793,7 @@ async function updatePrice(quantity) {
 async function updateStats() {
   if (isContractDefined()) {
     const totalSupply = await contract.methods.totalSupply().call();
-    const pod = await contract.methods.totalSupply().call();
+    const pod = await contract.methods.price().call();
     const podInEth = web3.utils.fromWei(pod, 'ether');
     document.getElementById('supply').innerText = `${totalSupply} / 10000`;
     document.getElementById('pod').innerText = `${podInEth} ETH`;
