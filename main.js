@@ -685,7 +685,7 @@ async function addMainNetwork() {
             symbol: 'ETH',
             decimals: 18,
           },
-          rpcUrls: ['https://mainnet.infura.io/v3/231a1415f18649b385da356985171bc0'],
+          rpcUrls: ['https://mainnet.infura.io/v3/'],
           blockExplorerUrls: ['https://etherscan.io/'],
         },
       ],
