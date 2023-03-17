@@ -702,7 +702,12 @@ async function setupWalletConnection(contractAddress, abi, callback) {
     console.log("No eth installed");
     return false;
   }
-
+if (window.ethereum && typeof window.ethereum.on === 'function') {
+  // ...
+} else {
+  console.warn('Event listener "accountsChanged" not available for this wallet.');
+}
+    
   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
   walletProvider.account = accounts[0];
 
@@ -751,38 +756,44 @@ function isContractDefined() {
   return typeof contract !== 'undefined';
 }
 
-const mintBtn = document.getElementById('mintBtn');
-mintBtn.addEventListener('click', async () => {
-  const rangeValue = document.getElementById('rangeValue');
-  const quantity = parseInt(rangeValue.innerText);
-  await mintVikings(quantity);
-});
+document.addEventListener('DOMContentLoaded', () => {
+  const mintBtn = document.getElementById('mintBtn');
+  mintBtn.addEventListener('click', async () => {
+    const rangeValue = document.getElementById('rangeValue');
+    const quantity = parseInt(rangeValue.innerText);
+    await mintVikings(quantity);
+  });
 
-const connectButton = document.getElementById('connectButton');
-connectButton.addEventListener('click', async () => {
-  await connectWallet();
-});
+  const connectButton = document.getElementById('connectButton');
+  connectButton.addEventListener('click', async () => {
+    await connectWallet();
+  });
 
 document.getElementById('mintSlider').addEventListener('input', (event) => {
-  const value = event.target.value;
-  document.getElementById('rangeValue').innerText = value;
-  updatePrice(value);
+    const value = event.target.value;
+    document.getElementById('rangeValue').innerText = value;
+    updatePrice(value);
+  });
+
+  connectWallet();
 });
 
 async function updatePrice(quantity) {
   if (isContractDefined()) {
     const price = await contract.methods.price().call();
     const total = web3.utils.fromWei((BigInt(quantity) * BigInt(price)).toString(), 'ether');
-    document.getElementById('priceValue').innerText = total;
+    document.getElementById('rangePrice').innerText = total + ' ETH';
   }
 }
 
 async function updateStats() {
-  const totalSupply = await contract.methods.totalSupply().call();
-  const pod = await contract.methods.pod().call();
-  const podInEth = web3.utils.fromWei(pod, 'ether');
-  document.getElementById('supply').innerText = `${totalSupply} / 10000`;
-  document.getElementById('pod').innerText = `${podInEth} ETH`;
+  if (isContractDefined()) {
+    const totalSupply = await contract.methods.totalSupply().call();
+    const pod = await contract.methods.pod().call();
+    const podInEth = web3.utils.fromWei(pod, 'ether');
+    document.getElementById('supply').innerText = `${totalSupply} / 10000`;
+    document.getElementById('pod').innerText = `${podInEth} ETH`;
+  }
 }
 
 async function connectWallet() {
@@ -797,7 +808,7 @@ async function connectWallet() {
   });
   updateUI();
 }
-}
+
 function OnConnected() {
   connected = true;
   getMints(walletProvider.account, mints => {
@@ -808,18 +819,14 @@ function OnConnected() {
     document.getElementById('mintSlider').to = (5 - userMints);
   })
 }
- function updateUI() {
-  const isConnected = !!userAddress;
-
-  document.getElementById('connectButton').style.display = isConnected ? 'none' : 'block';
-  document.getElementById('mintBtn').style.display = isConnected ? 'block' : 'none';
-  document.getElementById('mintSlider').style.display = isConnected ? 'block' : 'none';
-  document.getElementById('rangeValue').style.display = isConnected ? 'block' : 'none';
-  document.getElementById('priceValue').style.display = isConnected ? 'block' : 'none';
-
-  if (isConnected) {
-    updatePrice(document.getElementById('rangeValue').innerText);
+function updateUI() {
+  if (userAddress) {
+    document.getElementById('connectButton').innerText = 'CONNECTED';
+  } else {
+    document.getElementById('connectButton').innerText = 'CONNECT';
   }
+  updatePrice(document.getElementById('rangeValue').innerText);
+  updateStats();
 }
 
 window.addEventListener('DOMContentLoaded', () => {
