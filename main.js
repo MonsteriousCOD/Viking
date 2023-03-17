@@ -720,15 +720,6 @@ async function setupWalletConnection(contractAddress, abi, callback) {
   callback && callback(!!walletProvider.account);
 }
 
-if (window.ethereum && typeof window.ethereum.on === 'function') {
-  window.ethereum.on('accountsChanged', async (accounts) => {
-    userAddress = accounts[0];
-    updatePrice(document.getElementById('rangeValue').innerText);
-  });
-} else {
-  console.warn('Event listener "accountsChanged" not available for this wallet.');
-}
-
 async function mintVikings(quantity) {
   const errorMessageElement = document.getElementById("error-message");
   errorMessageElement.style.display = "none";
@@ -803,28 +794,17 @@ async function updateStats() {
 }
 
 async function connectWallet() {
-  await setupWalletConnection(contractAddress, abi, (isConnected) => {
+  await setupWalletConnection(contractAddress, abi, async (isConnected) => {
     if (isConnected) {
       const chain = await getUserChain();
-  if (chain !== '1') {
-    addMainNetwork();
-  }
-      });
+      if (chain !== '1') {
+        addMainNetwork();
+      }
     }
   });
   updateUI();
 }
 
-function OnConnected() {
-  connected = true;
-  getMints(walletProvider.account, mints => {
-    userMints = mints;
-    console.log("Connected, on the right chain, fetching mints: " + mints);
-    document.getElementById("connectButton").innerText = "CONNECTED";
-
-    document.getElementById('mintSlider').to = (5 - userMints);
-  })
-}
 function updateUI() {
   if (userAddress) {
     document.getElementById('connectButton').innerText = 'CONNECTED';
